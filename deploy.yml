@@ -1,0 +1,60 @@
+---
+- hosts: all
+  gather_facts: true
+  tasks:
+    - name: Docker PPA
+      become: true
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+        state: present
+    - name: Add Docker PPA Key
+      become: true
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Update APT
+      become: true
+      apt:
+        update_cache: true
+    - name: Install Docker CE
+      become: true
+      apt:
+        name: docker-ce
+    - name: "Install docker-compose"
+      become: true
+      copy:
+        src: docker-compose
+        dest: /usr/local/bin/docker-compose
+        owner: root
+        group: root
+        mode: 0755
+    - name: Docker directory
+      become: true
+      file:
+        path: /srv/docker
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+    - name: Copy docker-compose.yml
+      become: true
+      copy:
+        src: docker-compose.yml
+        dest: /srv/docker/docker-compose.yml
+        owner: root
+        group: root
+    - name: Docker compose build
+      become: true
+      shell: /usr/local/bin/docker-compose build
+      args:
+          chdir: /srv/docker
+    - name: Docker compose pull
+      become: true
+      shell: /usr/local/bin/docker-compose pull
+      args:
+          chdir: /srv/docker
+    - name: Docker compose up
+      become: true
+      shell: /usr/local/bin/docker-compose up -d
+      args:
+          chdir: /srv/docker
